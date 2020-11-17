@@ -8,8 +8,14 @@ nox.options.reuse_existing_virtualenvs = True
 # Whenever type-hints are completed on a file it should be added here so that
 # this file will continue to be checked by mypy. Errors from other files are
 # ignored.
-TYPED_FILES = {"aiobinance/api/__init__.py", "aiobinance/api/" "aiobinance/__init__.py"}
-SOURCE_FILES = ["docs/", "aiobinance/", "tests/", "noxfile.py", "setup.py"]
+TYPED_FILES = {
+    "datacrystals/__init__.py",
+    "datacrystals/_crystals.py",
+    "datacrystals/_collection.py",
+    "datacrystals/_version.py",
+}
+
+SOURCE_FILES = ["docs/", "datacrystals/", "noxfile.py", "setup.py"]
 
 
 # Ref : urllib3 has a strict nox-based process that we duplicate here.
