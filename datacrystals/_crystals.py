@@ -4,12 +4,15 @@ import functools
 from collections.abc import Collection
 from dataclasses import fields
 from decimal import Decimal
-from typing import Any, Callable, Optional, Type, Union
+from types import FunctionType
+from typing import Any, Callable, List, Optional, Tuple, Type, Union
 from dataclasses import asdict
 import hypothesis.strategies as st
 from hypothesis import infer
+from hypothesis.strategies import SearchStrategy
 
-def _str(slf):
+
+def _str(slf) -> str:
     # Human friendly display of dataclasses
     typename = type(slf).__name__
     lines = [f"{typename}", "-" * len(typename)]
@@ -19,12 +22,12 @@ def _str(slf):
     return "\n".join(lines)
 
 
-def _dir(slf):
+def _dir(slf) -> List[str]:
     # only expose fields
     return [f.name for f in fields(slf)]
 
 
-def _strategy(cls):
+def _strategy(cls)-> SearchStrategy:
     # Strategie inferring attributes from type hints by default
 
     params = {}
@@ -33,21 +36,16 @@ def _strategy(cls):
         if f.name:
             params.update({f.name: infer})
 
+    # calling the functional factory...
     return st.builds(cls, **params)
 
-
-@functools.lru_cache()
-def _create(cls, **values):
-    return cls(**values)
-
-
-def _instance_collection():
-    # TODO : wrapping lru_cache like a collection !
-    pass
 
 try:
     from pydantic.dataclasses import dataclass as pydantic_dataclass
 
+
+    # Attempting to make this functional, the easy way.
+    @functools.lru_cache()
     def datacrystal(
         _cls: Optional[Type[Any]] = None,
         *,
@@ -85,6 +83,14 @@ try:
         >>> dir(SampleDCInstance)
         ['attr_dec', 'attr_int']
 
+        Important: Just as with dataclasses, constructing equal instances is possible,
+        and no effort is made here to make __init__ functional.
+        >>> sdc1 = SampleDataCrystal(attr_int= 42, attr_dec=decimal.Decimal("3.1415"))
+        >>> sdc2 = SampleDataCrystal(attr_int= 42, attr_dec=decimal.Decimal("3.1415"))
+        >>> sdc1 is sdc2
+        False
+        >>> sdc1 == sdc2
+        True
         """
         cls = pydantic_dataclass(
             _cls,
@@ -109,7 +115,6 @@ try:
         # setattr(cls, "Collection", _collection_from_class(cls))  # collection type registered as part of this type.
         # setattr(cls, "collection", cls.Collection())  # collection instance to store created class instances
 
-        # setattr(cls, "create", create) # TODO
         return cls
 
 
@@ -123,6 +128,8 @@ except ImportError as ie:
 
     from dataclasses import dataclass as python_dataclass
 
+    # Attempting to make this functional, the easy way.
+    @functools.lru_cache()
     def datacrystal(
         _cls: Optional[Type[Any]] = None,
         *,
@@ -158,6 +165,14 @@ except ImportError as ie:
         >>> dir(SampleDCInstance)
         ['attr_dec', 'attr_int']
 
+        Important: Just as with dataclasses, constructing equal instances is possible,
+        and no effort is made here to make __init__ functional.
+        >>> sdc1 = SampleDataCrystal(attr_int= 42, attr_dec=decimal.Decimal("3.1415"))
+        >>> sdc2 = SampleDataCrystal(attr_int= 42, attr_dec=decimal.Decimal("3.1415"))
+        >>> sdc1 is sdc2
+        False
+        >>> sdc1 == sdc2
+        True
         """
         cls = python_dataclass(
             _cls,

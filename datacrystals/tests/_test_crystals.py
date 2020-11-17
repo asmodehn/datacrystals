@@ -2,7 +2,7 @@ import unittest
 from dataclasses import fields, asdict
 
 import hypothesis.strategies as st
-from hypothesis import given
+from hypothesis import Verbosity, given, settings
 
 # strategy to build dataclasses dynamically
 from datacrystals._crystals import datacrystal
@@ -31,16 +31,16 @@ def st_dcls(
     return dcls
 
 
-
-
 class TestDataCrystal(unittest.TestCase):
 
     @given(dcls=st_dcls(), data=st.data())
+    @settings(verbosity=Verbosity.verbose)
     def test_strategy(self, dcls, data):
         # validating strategy
         dcinst = data.draw(dcls.strategy())
 
         assert isinstance(dcinst, dcls)
+        assert type(dcinst) == dcls
 
     @given(dcls=st_dcls(), data=st.data())
     def test_str(self, dcls, data):
@@ -90,42 +90,6 @@ class TestDataCrystal(unittest.TestCase):
         assert dcA1inst != dcB1inst
 
 
-
-
-@st.composite
-def st_dclsfun(
-    draw, names=st.text(alphabet=st.characters(whitelist_categories=["Lu", "Ll"]), min_size=1, max_size=5)
-):  # TODO : character strategy for legal python identifier ??
-
-    from types import FunctionType
-
-    attrs = draw(
-        st.dictionaries(
-            keys=st.text(),
-            values=st.one_of(  # default values
-                st.integers(),
-                st.floats(),
-                st.decimals(),
-                st.text(),
-                # etc. TODO support more...
-            ),
-        )
-    )
-
-    result = st.one_of(st.integers(),
-                st.floats(),
-                st.decimals(),
-                st.text(),
-                # etc. TODO support more...
-            )
-
-    # simple function, defined dynamically
-    foo_code = compile(f'def foo({", ".join([a + ": " + type(v).__name__ for a, v in attrs.items()])}) -> {type(result).__name__}: return "{result}"', "<string>", "exec")
-    foo_func = FunctionType(foo_code.co_consts[0], globals(), "foo")
-
-    dcls = datacrystal(foo_func)
-
-    return dcls
 
 
 if __name__ == '__main__':
