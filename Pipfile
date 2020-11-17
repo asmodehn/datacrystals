@@ -12,6 +12,7 @@ nox = "*"
 isort = "*"
 datacrystals = {editable = true, path = "."}
 gitchangelog = "*"
+ptpython = "*"
 
 [packages]
 result = "*"

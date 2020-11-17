@@ -132,7 +132,7 @@ def _collection_from_class(_cls):
 
             tablines = tabulate(optdf, headers="keys", tablefmt="psql")
 
-            return "\n".join(lines) + tablines
+            return "\n".join(lines) + "\n" + tablines
 
         collection_attr["__str__"] = strtab
 
