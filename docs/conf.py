@@ -24,10 +24,21 @@ author = "AlexV"
 
 # -- General configuration ---------------------------------------------------
 
+import os
+import sys
+
+# Running Python from the base folder of the repo, allowing `import datacrystals` in code blocks
+sys.path.insert(0, os.path.abspath(".."))
+
+
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = []
+extensions = [
+    "sphinx_autorun",
+    "sphinx.ext.doctest",
+    "sphinx.ext.autodoc",
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
