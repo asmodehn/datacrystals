@@ -12,7 +12,7 @@ from datacrystals.tests._test_crystals import st_dcls
 
 
 @st.composite
-def st_collec(draw, elems_type: SearchStrategy=st_dcls(), max_size=5):
+def st_collec(draw, elems_type: SearchStrategy = st_dcls(), max_size=5):
 
     # pick a type
     dcls = draw(elems_type)
@@ -59,7 +59,7 @@ class TestCollection(unittest.TestCase):
         dcinst = data.draw(collec.strategy())
 
         inner_fields = {f for f in fields(dcinst.Inner)}
-        expected = {'Inner', 'strategy', 'optimize', *inner_fields}
+        expected = {"Inner", "strategy", "optimize", *inner_fields}
 
         dcdir = dir(dcinst)
 
@@ -71,7 +71,6 @@ class TestCollection(unittest.TestCase):
         assert {a for a in dcdir if not a.startswith("__")}.issubset(expected), {
             a for a in dcdir if not a.startswith("__")
         }.difference(expected)
-
 
     # specific collection behavior
 
@@ -105,5 +104,5 @@ class TestCollection(unittest.TestCase):
     #     raise NotImplementedError
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

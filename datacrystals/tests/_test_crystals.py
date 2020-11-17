@@ -1,5 +1,5 @@
 import unittest
-from dataclasses import fields, asdict
+from dataclasses import asdict, fields
 
 import hypothesis.strategies as st
 from hypothesis import Verbosity, given, settings
@@ -10,7 +10,12 @@ from datacrystals._crystals import datacrystal
 
 @st.composite
 def st_dcls(
-    draw, names=st.text(alphabet=st.characters(whitelist_categories=["Lu", "Ll"]), min_size=1, max_size=5)
+    draw,
+    names=st.text(
+        alphabet=st.characters(whitelist_categories=["Lu", "Ll"]),
+        min_size=1,
+        max_size=5,
+    ),
 ):  # TODO : character strategy for legal python identifier ??
 
     attrs = draw(
@@ -32,7 +37,6 @@ def st_dcls(
 
 
 class TestDataCrystal(unittest.TestCase):
-
     @given(dcls=st_dcls(), data=st.data())
     @settings(verbosity=Verbosity.verbose)
     def test_strategy(self, dcls, data):
@@ -81,16 +85,12 @@ class TestDataCrystal(unittest.TestCase):
 
         a1f = asdict(dcA1inst)
         a2f = asdict(dcA2inst)
-        assert (dcA1inst == dcA2inst) == (
-            a1f == a2f
-        )
+        assert (dcA1inst == dcA2inst) == (a1f == a2f)
 
         dcB1inst = dclsB(**{f: v for f, v in a1f.items() if f in fields(dclsB)})
         # always different, even if values are same (types are not) !
         assert dcA1inst != dcB1inst
 
 
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

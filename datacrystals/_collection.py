@@ -1,12 +1,10 @@
 import functools
+from collections.abc import Collection
+from dataclasses import asdict, fields
 from decimal import Decimal
 from typing import List, Type
 
 import hypothesis.strategies as st
-from collections.abc import Collection
-
-from dataclasses import asdict, fields
-
 import pandas as pd
 
 
@@ -57,13 +55,14 @@ def _collection_from_class(_cls):
     def init(self, *inners: _cls):
         # Reminder : this object is considered monotonic (only appending is possible via call)
         df = pd.DataFrame.from_records(
-            [asdict(dc) for dc in inners], columns=[f.name for f in fields(_cls)],
+            [asdict(dc) for dc in inners],
+            columns=[f.name for f in fields(_cls)],
         )
 
         self.Inner = _cls
         self._df = df
 
-    collection_attr["__annotations__"] = {'Inner': Type, '_df': pd.DataFrame}
+    collection_attr["__annotations__"] = {"Inner": Type, "_df": pd.DataFrame}
     collection_attr["__init__"] = init
 
     collection_attr["__cache__"] = {}
@@ -80,7 +79,7 @@ def _collection_from_class(_cls):
 
         return opt_copy
 
-    collection_attr["optimize"]=optimize
+    collection_attr["optimize"] = optimize
 
     # abc.Collection interface
 
@@ -97,10 +96,12 @@ def _collection_from_class(_cls):
     def iter(self):
         for i in self._df.itertuples(index=True):
             # dropping index (needed in case class has no attrs, we technically still have an instance)
-            attr = {a: v for a, v in i._asdict().items() if a != 'Index'}
-            yield _cls(**attr)  # TODO : functional behavior on instance creation to simplify things ???
+            attr = {a: v for a, v in i._asdict().items() if a != "Index"}
+            yield _cls(
+                **attr
+            )  # TODO : functional behavior on instance creation to simplify things ???
 
-    collection_attr["__iter__"]= iter
+    collection_attr["__iter__"] = iter
 
     def llen(self):
         return len(self._df)
@@ -109,9 +110,7 @@ def _collection_from_class(_cls):
 
     def _dir(slf) -> List[str]:
 
-        exposed = ["strategy",
-                   "Inner",
-                   "optimize"]
+        exposed = ["strategy", "Inner", "optimize"]
 
         # and expose fields
         inner_fields = [f.name for f in fields(slf.Inner)]
@@ -123,6 +122,7 @@ def _collection_from_class(_cls):
     # However we may have more appropriate human display
     try:
         from tabulate import tabulate
+
         def strtab(slf):
             optdf = slf.optimize()
 
@@ -134,9 +134,10 @@ def _collection_from_class(_cls):
 
             return "\n".join(lines) + tablines
 
-        collection_attr["__str__"]= strtab
+        collection_attr["__str__"] = strtab
 
     except ImportError:
+
         def strraw(slf):
             optdf = slf.optimize()
 

@@ -2,11 +2,11 @@
 # Basic record type. Non Empty set of attributes (order shouldn't matter, unicity enforced)
 import functools
 from collections.abc import Collection
-from dataclasses import fields
+from dataclasses import asdict, fields
 from decimal import Decimal
 from types import FunctionType
 from typing import Any, Callable, List, Optional, Tuple, Type, Union
-from dataclasses import asdict
+
 import hypothesis.strategies as st
 from hypothesis import infer
 from hypothesis.strategies import SearchStrategy
@@ -27,7 +27,7 @@ def _dir(slf) -> List[str]:
     return [f.name for f in fields(slf)]
 
 
-def _strategy(cls)-> SearchStrategy:
+def _strategy(cls) -> SearchStrategy:
     # Strategie inferring attributes from type hints by default
 
     params = {}
@@ -42,7 +42,6 @@ def _strategy(cls)-> SearchStrategy:
 
 try:
     from pydantic.dataclasses import dataclass as pydantic_dataclass
-
 
     # Attempting to make this functional, the easy way.
     @functools.lru_cache()
