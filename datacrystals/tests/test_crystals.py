@@ -38,7 +38,7 @@ def st_dcls(
 
 class TestDataCrystal(unittest.TestCase):
     @given(dcls=st_dcls(), data=st.data())
-    @settings(verbosity=Verbosity.verbose)
+    # @settings(verbosity=Verbosity.verbose)
     def test_strategy(self, dcls, data):
         # validating strategy
         dcinst = data.draw(dcls.strategy())

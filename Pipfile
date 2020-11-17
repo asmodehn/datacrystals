@@ -5,10 +5,20 @@ verify_ssl = true
 
 [dev-packages]
 sphinx = "*"
+pre-commit = "*"
+black = "*"
+sphinx-autorun = "*"
+pytest = "*"
+nox = "*"
 
 [packages]
 result = "*"
 hypothesis = "*"
+pandas = "*"
+pydantic = "*"
 
 [requires]
 python_version = "3.8"
+
+[pipenv]
+allow_prereleases = true

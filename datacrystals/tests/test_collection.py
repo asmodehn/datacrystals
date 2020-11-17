@@ -8,7 +8,7 @@ from hypothesis import Verbosity, given, settings
 from hypothesis.strategies import SearchStrategy
 
 from datacrystals._collection import _collection_from_class
-from datacrystals.tests._test_crystals import st_dcls
+from datacrystals.tests.test_crystals import st_dcls
 
 
 @st.composite
@@ -28,7 +28,7 @@ class TestCollection(unittest.TestCase):
 
     # Same behavior as crystals
     @given(collec=st_collec(), data=st.data())
-    @settings(verbosity=Verbosity.verbose)
+    # @settings(verbosity=Verbosity.verbose)
     def test_strategy(self, collec, data):
         # validating strategy
         cinst = data.draw(collec.strategy())
