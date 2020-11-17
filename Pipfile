@@ -7,11 +7,11 @@ verify_ssl = true
 sphinx = "*"
 pre-commit = "*"
 black = "*"
-sphinx-autorun = "*"
 pytest = "*"
 nox = "*"
 isort = "*"
 datacrystals = {editable = true, path = "."}
+gitchangelog = "*"
 
 [packages]
 result = "*"
