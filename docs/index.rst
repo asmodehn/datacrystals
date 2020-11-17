@@ -11,6 +11,7 @@ Welcome to datacrystals's documentation!
    :caption: Contents:
 
    tutorial
+   datacrystals
 
 
 Indices and tables
