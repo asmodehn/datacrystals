@@ -44,7 +44,7 @@ try:
     from pydantic.dataclasses import dataclass as pydantic_dataclass
 
     # Attempting to make this functional, the easy way.
-    @functools.lru_cache()
+    @functools.lru_cache(typed=True)
     def datacrystal(
         _cls: Optional[Type[Any]] = None,
         *,
@@ -57,12 +57,12 @@ try:
 
         This is usable as python's dataclass decorator, but also provide more features, along with more strictness
         >>> import decimal
-        >>> class SampleDataCrystal:
+        >>> @datacrystal
+        ... class SampleDataCrystal:
         ...      attr_int: int
         ...      attr_dec: decimal.Decimal
+        ...
 
-        Using it as a decorator:
-        >>> SampleDataCrystal = datacrystal(SampleDataCrystal)
         >>> SampleDCInstance = SampleDataCrystal(attr_int= 42, attr_dec=decimal.Decimal("3.1415"))
 
         datacrystal() provides, on top of pydantic's dataclass:
@@ -128,7 +128,7 @@ except ImportError as ie:
     from dataclasses import dataclass as python_dataclass
 
     # Attempting to make this functional, the easy way.
-    @functools.lru_cache()
+    @functools.lru_cache(typed=True)
     def datacrystal(
         _cls: Optional[Type[Any]] = None,
         *,
@@ -139,12 +139,11 @@ except ImportError as ie:
 
         This is usable as python's dataclass decorator, but also provide more features, along with more strictness
         >>> import decimal
-        >>> class SampleDataCrystal:
+        >>> @datacrystal
+        ... class SampleDataCrystal:
         ...      attr_int: int
         ...      attr_dec: decimal.Decimal
 
-        Using it as a decorator
-        >>> SampleDataCrystal = datacrystal(SampleDataCrystal)
         >>> SampleDCInstance = SampleDataCrystal(attr_int= 42, attr_dec=decimal.Decimal("3.1415"))
 
         dataclass() provides, on top of python's dataclass:

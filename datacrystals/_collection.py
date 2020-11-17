@@ -9,7 +9,7 @@ import pandas as pd
 
 
 # Attempting to make this functional, the easy way.
-@functools.lru_cache
+@functools.lru_cache(typed=True)
 def _collection_from_class(_cls):
     """
     >>> from datacrystals import datacrystal
