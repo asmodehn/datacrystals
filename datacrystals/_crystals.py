@@ -41,47 +41,33 @@ def _strategy(cls: Type[DataCrystalType]) -> st.SearchStrategy:
     return st.builds(cls, **params)
 
 
-# Attempting to make this functional, the easy way.
-@functools.lru_cache(typed=True)
+try:
+    from pydantic.dataclasses import dataclass  # type: ignore
+except ImportError as ie:
+    print(ie)
+    print("WARNING: datacrystals implementation falling back to python's dataclasses.")
+    print(
+        "WARNING: Everything should work, but you might want to download pydantic instead."
+    )
+
+    from dataclasses import dataclass
+
+
 def _make_dataclass(
     _cls: Type[Any],
     order: bool,
 ) -> Type[DataCrystalType]:
-    try:
-        from pydantic.dataclasses import dataclass as pydantic_dataclass  # type: ignore
 
-        cls = pydantic_dataclass(
-            _cls,
-            init=True,
-            repr=True,
-            eq=True,
-            order=order,
-            unsafe_hash=False,
-            frozen=True,
-            config=None,
-        )
-
-    except ImportError as ie:
-        print(ie)
-        print(
-            "WARNING: datacrystals implementation falling back to python's dataclasses."
-        )
-        print(
-            "WARNING: Everything should work, but you might want to download pydantic instead."
-        )
-
-        from dataclasses import dataclass as python_dataclass
-
-        cls = python_dataclass(
-            init=True,
-            repr=True,
-            eq=True,
-            order=order,
-            unsafe_hash=False,
-            frozen=True,
-        )(
-            _cls
-        )  # calling it as a decorator to make mypy happy.
+    cls = dataclass(
+        init=True,
+        repr=True,
+        eq=True,
+        order=order,
+        unsafe_hash=False,
+        frozen=True,
+    )(
+        _cls
+    )  # calling it as a decorator to make mypy happy.
 
     # extras for cleaner 'record' class
     setattr(cls, "__str__", _str)

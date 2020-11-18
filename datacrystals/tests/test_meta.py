@@ -1,66 +1,27 @@
 import unittest
+from types import MethodType
 from typing import Any, Dict, List, Set, Tuple
 
 import hypothesis.strategies as st
 from hypothesis import Verbosity, given, settings
 
 from .._meta import CrystalMeta, _crystal_key
-
-
-@st.composite
-def st_crystalclasses(
-    draw,
-    names=st.text(
-        alphabet=st.characters(whitelist_categories=["Lu", "Ll"]),
-        min_size=1,
-        max_size=5,
-    ),
-):  # TODO : character strategy for legal python identifier ??
-    """
-     This is a simple strategy creating a class dynamically from a random dictionnary of attributes.
-    using our metaclass.
-    """
-    attrs = draw(
-        st.dictionaries(
-            keys=st.text(min_size=1),  # identifier
-            values=st.one_of(  # default values
-                st.integers(),
-                st.floats(),
-                st.decimals(
-                    allow_nan=False, allow_infinity=False
-                ),  # CAREFUL NaN is not hashable !
-                st.text(),
-                # etc. TODO support more... st.functions() ??
-            ),
-        )
-    )
-
-    annots = draw(
-        st.dictionaries(
-            keys=st.text(min_size=1),  # identifier
-            values=st.sampled_from(  # annotations
-                [int, float, str, Set, Tuple, List, Dict, Any]
-                # etc. TODO support more... function type ??
-            ),
-        )
-    )
-
-    attrs["__annotations__"] = annots
-
-    return CrystalMeta(draw(names), (), attrs)
+from .test_crystals import st_dynclasses
 
 
 class TestCrystalKey(unittest.TestCase):
     """This tests the equality semantics on classes"""
 
-    @given(cls=st_crystalclasses(), data=st.data())
-    def test_crystal_key(self, cls, data):
+    @given(dynclass=st_dynclasses(), data=st.data())
+    def test_crystal_key(self, dynclass, data):
+
+        cls = CrystalMeta(*dynclass)
 
         k1 = _crystal_key(cls)
         k2 = _crystal_key(cls)
         assert k1 == k2
 
-        other_cls = data.draw(st_crystalclasses())
+        other_cls = CrystalMeta(*data.draw(st_dynclasses()))
 
         k3 = _crystal_key(other_cls)
 
@@ -91,45 +52,51 @@ class TestCrystalKey(unittest.TestCase):
 
 
 class TestMeta(unittest.TestCase):
-    @given(cls=st_crystalclasses())
+    @given(dynclass=st_dynclasses())
     @settings(verbosity=Verbosity.verbose)
-    def test_strategy(self, cls):
+    def test_strategy(self, dynclass):
 
+        cls = CrystalMeta(*dynclass)
         assert isinstance(cls, CrystalMeta)
         assert type(cls) == CrystalMeta
 
-    @given(cls=st_crystalclasses())
+    @given(dynclass=st_dynclasses())
     # @settings(verbosity=Verbosity.verbose)
-    def test_equality_hash(self, cls):
+    def test_equality_hash(self, dynclass):
 
-        clsdup = CrystalMeta(cls.__qualname__, (), vars(cls))
+        cls = CrystalMeta(*dynclass)
+        clsdup = CrystalMeta(*dynclass)
 
-        assert isinstance(clsdup, CrystalMeta)
-        assert type(clsdup) == CrystalMeta
+        # we have reflexivity
+        assert cls is cls
+        assert cls == cls
+        assert hash(cls) == hash(cls)
 
-        # Actual NOT THE SAME underneath (python will be python),
-        # we wont enfoce functional behavior this deep...
+        assert clsdup is clsdup
+        assert clsdup == clsdup
+        assert hash(clsdup) == hash(clsdup)
+
+        # But these are NOT THE SAME underneath, # TODO : should they be ??
+        #  and we will not enforce functional behavior this deep.
         assert clsdup is not cls
 
-        # However overridden type equality is True (assumption: same content => same behavior)
-        # REMINDER: This remain True only as long as class doesnt mutate !!
-        assert clsdup == cls
-        assert hash(clsdup) == hash(cls)
+        # This is reflected at the user level, via the crystal_key that checks many attributes:
+        assert clsdup != cls
+        assert hash(clsdup) != hash(cls)
 
-    @given(cls=st_crystalclasses())
-    def test_setattr(self, cls):
-        with self.assertRaises(TypeError):
-            cls.new_stuff = 42
-
-    @given(cls=st_crystalclasses())
-    def test_annotations(self, cls):
-        for f in vars(cls):
+    @given(dynclass=st_dynclasses())
+    def test_annotations(self, dynclass):
+        cls = CrystalMeta(*dynclass)
+        for f in vars(cls):  # TODO : rely on dataclasses for this behavior...
             # making sure all existing class values are present in annotations
-            if not f.startswith("__"):
-                assert f in cls.__annotations__
+            if (
+                not f.startswith("__") and type(getattr(cls, f)) != MethodType
+            ):  # TODO : better typing of methods...
+                assert f in cls.__annotations__, f"{f} not in {cls.__annotations__}"
 
-    @given(cls=st_crystalclasses())
-    def test_repr(self, cls):
+    @given(dynclass=st_dynclasses())
+    def test_repr(self, dynclass):
+        cls = CrystalMeta(*dynclass)
         assert cls.__module__ in repr(cls)
         assert cls.__qualname__ in repr(cls)
         # making sure all annotations are displayed in repr (we aim to enforce types)

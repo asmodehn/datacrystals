@@ -5,6 +5,9 @@ import typing
 import unittest
 from types import MappingProxyType
 
+from datacrystals import _crystals
+from datacrystals._crystals import _make_dataclass
+
 
 def _crystal_key(cls):
     """Deterministic function to compute the 'signature' or 'key' of a 'crystal'.
@@ -12,17 +15,9 @@ def _crystal_key(cls):
     We cannot cache this, so the code has to be unambiguous, deterministic, and fast enough...
     """
     # Note: a different __module__, __name__ or __doc__ is enough to get a different type.
-    dtyp = {
-        a: t
-        for a, t in cls.__annotations__.items()
-        if a not in ["__dict__", "__weakref__"]
-    }
-    # Annotations must not appear in values, as the dict is not hashable... # TODO : maybe make this a mapping proxy to prevent mutation ?
-    dflt = {
-        a: d
-        for a, d in vars(cls).items()
-        if a not in ["__dict__", "__weakref__", "__annotations__"]
-    }
+    dtyp = {a: t for a, t in cls.__annotations__.items()}
+    # Annotations must not appear in values, as the dict is not hashable...
+    dflt = {a: d for a, d in vars(cls).items() if not a.startswith("__")}
 
     # gathering all keys (with value defined or not)
     attrs = set(dtyp.keys()).union(set(dflt.keys()))
@@ -72,7 +67,16 @@ class CrystalMeta(type):
                     type(attrs[a]) if a in attrs else typing.Any
                 )
 
-        return super(CrystalMeta, mcls).__new__(mcls, typename, (), attrs)
+        # a dataclass, which is also our instantiated class
+        cls = super(CrystalMeta, mcls).__new__(mcls, typename, (), attrs)
+        dcls = _make_dataclass(
+            cls, order=False
+        )  # Note: we simply rely on frozen dataclass for immutability
+
+        # making this dict a proxy to allow hashing
+        dcls.__dataclass_fields__ = MappingProxyType(dcls.__dataclass_fields__)
+
+        return dcls
 
     def __repr__(cls):
         base_repr = f"<class '{cls.__module__}.{cls.__qualname__}'>"
@@ -93,11 +97,9 @@ class CrystalMeta(type):
     def __eq__(cls, other: CrystalMeta):
         if isinstance(other, CrystalMeta):
             return _crystal_key(cls) == _crystal_key(other)
+        elif other in [type, object]:  # known cases where False is appropriate
+            return False
         raise NotImplementedError  # we need to be very cautious here...
-
-    def __setattr__(cls, key, value):
-        # This allows us to cache the class via its hash !
-        raise TypeError("Classes built via CrystalMeta are immutable !")
 
 
 if __name__ == "__main__":
