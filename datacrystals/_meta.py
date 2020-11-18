@@ -3,24 +3,60 @@ from __future__ import annotations
 import functools
 import typing
 import unittest
+from types import MappingProxyType
+
+
+def _crystal_key(cls):
+    """Deterministic function to compute the 'signature' or 'key' of a 'crystal'.
+    This is used for equality checking and hashing on the class/type itself.
+    We cannot cache this, so the code has to be unambiguous, deterministic, and fast enough...
+    """
+    # Note: a different __module__, __name__ or __doc__ is enough to get a different type.
+    dtyp = {
+        a: t
+        for a, t in cls.__annotations__.items()
+        if a not in ["__dict__", "__weakref__"]
+    }
+    # Annotations must not appear in values, as the dict is not hashable... # TODO : maybe make this a mapping proxy to prevent mutation ?
+    dflt = {
+        a: d
+        for a, d in vars(cls).items()
+        if a not in ["__dict__", "__weakref__", "__annotations__"]
+    }
+
+    # gathering all keys (with value defined or not)
+    attrs = set(dtyp.keys()).union(set(dflt.keys()))
+
+    # If an attributes is in __annotations__, but does not have default => we take hte key with None as value
+    # To make his existence count, but without any value...
+    # Obviously this will create conflict with None as default value -> it is !TEMPORARY!
+    # TODO : FIX IT (with some void/missing/empty custom type, or by checking if type is Optional[])
+    return tuple(
+        (a, dflt.get(a, None), dtyp.get(a, type(dflt.get(a, None)))) for a in attrs
+    )
+    # Note this relies on the logic "if there is no type declared, there *has to be* a value"
 
 
 class CrystalMeta(type):
     """
-    Defining here a base type for all datacrystals.
-    This is based on named tuple and implements algebraicity for datacrystals.
+    Defining here a base type ('metaclass' in python speak) for all datacrystals.
+    This aims to implement algebraicity for datacrystals, eventually.
     """
 
     def __new__(
         mcls,
         typename: str,
         bases: typing.Optional[typing.Tuple] = None,
-        attrs: typing.Optional[typing.Dict] = None,
+        attrs: typing.Optional[typing.Union[typing.Dict, MappingProxyType]] = None,
     ):
-
         # dropping attributs that are from core python if present, they will be recreated appropriately anyway:
-        attrs.pop("__dict__", None)
-        attrs.pop("__weakref__", None)
+        if isinstance(attrs, MappingProxyType):
+            attrs = {
+                a: t for a, t in attrs.items() if a not in ["__dict__", "__weakref__"]
+            }
+        else:
+            attrs.pop("__dict__", None)
+            attrs.pop("__weakref__", None)
 
         # __module__ and __doc__ should be there already
 
@@ -46,18 +82,21 @@ class CrystalMeta(type):
         else:
             return base_repr
 
-    def __eq__(cls, other: CrystalMeta):
-        return type(cls) is type(other) and {
-            ca: ct
-            for ca, ct in vars(cls).items()
-            if ca not in ["__dict__", "__weakref__"]
-        } == {
-            oa: ot
-            for oa, ot in vars(other).items()
-            if oa not in ["__dict__", "__weakref__"]
-        }
+    def __hash__(cls):
+        """ hash definition to identify classes with same behavior"""
+        k = _crystal_key(cls)
+        try:
+            return hash(k)
+        except TypeError as te:
+            raise te
 
-    def __setattr__(self, key, value):
+    def __eq__(cls, other: CrystalMeta):
+        if isinstance(other, CrystalMeta):
+            return _crystal_key(cls) == _crystal_key(other)
+        raise NotImplementedError  # we need to be very cautious here...
+
+    def __setattr__(cls, key, value):
+        # This allows us to cache the class via its hash !
         raise TypeError("Classes built via CrystalMeta are immutable !")
 
 
