@@ -27,7 +27,7 @@ def st_crystalclasses(
                 st.floats(),
                 st.decimals(),
                 st.text(),
-                # etc. TODO support more...
+                # etc. TODO support more... st.functions() ??
             ),
         )
     )
@@ -42,6 +42,36 @@ class TestMeta(unittest.TestCase):
 
         assert isinstance(cls, CrystalMeta)
         assert type(cls) == CrystalMeta
+
+    @given(cls=st_crystalclasses())
+    @settings(verbosity=Verbosity.verbose)
+    def test_equality(self, cls):
+
+        clsdup = CrystalMeta(
+            cls.__qualname__,
+            (),
+            {
+                a: v
+                for a, v in vars(cls).items()
+                if a not in ["__dict__", "__weakref__"]
+            },
+        )
+
+        assert isinstance(clsdup, CrystalMeta)
+        assert type(clsdup) == CrystalMeta
+
+        # Actual NOT THE SAME underneath (python will be python),
+        # we wont enfoce functional behavior this deep...
+        assert clsdup is not cls
+
+        # However overridden type equality is True (assumption: same content => same behavior)
+        # REMINDER: This remain True only as long as class doesnt mutate !!
+        assert clsdup == cls
+
+    @given(cls=st_crystalclasses())
+    def test_setattr(self, cls):
+        with self.assertRaises(TypeError):
+            cls.new_stuff = 42
 
     @given(cls=st_crystalclasses())
     def test_annotations(self, cls):
