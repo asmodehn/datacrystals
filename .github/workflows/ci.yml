@@ -50,6 +50,7 @@ jobs:
         experimental: [false]
         include:
           - python-version: 3.9
+            dataclasses: [python, pydantic]
             os: ubuntu-latest
             experimental: true
 
