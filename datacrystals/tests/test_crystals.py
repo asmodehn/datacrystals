@@ -38,9 +38,13 @@ def st_dynclasses(
             keys=st.sampled_from(idtfrs),
             values=st.one_of(  # default values
                 st.integers(),
-                st.floats(),
+                st.floats(allow_nan=False, allow_infinity=False),
                 st.decimals(allow_nan=False, allow_infinity=False),
-                st.text(),
+                st.text(
+                    alphabet=st.characters(
+                        whitelist_categories=["Lu", "Ll", "Nd"], max_codepoint=128
+                    )
+                ),  # avoiding unicode rendering problems here...
                 # etc. TODO support more...
             ),
         )

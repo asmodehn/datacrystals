@@ -34,8 +34,18 @@ def _strategy(cls: Type[DataCrystalType]) -> st.SearchStrategy:
     params = {}
 
     for f in fields(cls):
-        if f.name:
-            params.update({f.name: infer})
+        if f.name:  # to pass as param we need to have a keyword
+            if f.type is float:
+                strat = st.floats(
+                    allow_nan=False
+                )  # Nans are not equals to themselves !
+            elif f.type is Decimal:
+                strat = st.decimals(
+                    allow_nan=False
+                )  # Nans are not equals to themselves !
+            else:
+                strat = infer
+            params.update({f.name: strat})
 
     # calling the functional factory...
     return st.builds(cls, **params)
