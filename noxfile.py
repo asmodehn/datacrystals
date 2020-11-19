@@ -67,11 +67,15 @@ def lint(session):
 
 
 @nox.session(python=["3.7", "3.8", "3.9"])
-def tests(session):
+@nox.parametrize("dataclasses", ["python", "pydantic"])
+def tests(session, dataclasses):
 
     # install the package first to retrieve all dependencies before testing
     session.install(".")
     session.install("pytest", "pytest-asyncio")
+
+    if dataclasses == "pydantic":
+        session.install("pydantic")
 
     # displaying current machine date (it could influence tests if not handled properly)
     session.run(*"date --iso-8601=ns".split(), external=True)
@@ -83,7 +87,14 @@ def tests(session):
 def docs(session):
 
     session.install(".")
-    session.install("sphinx", "sphinx_autorun")
+    session.install("pytest", "sphinx", "sphinx_autorun")
 
+    # displaying current machine date (it could influence tests if not handled properly)
+    session.run(*"date --iso-8601=ns".split(), external=True)
+
+    session.run(*"pytest -sv --doctest-modules --doctest-glob=*.rst".split())
+    # Here we rely on sphinx to run doctest by itself on .rst files
     session.cd("docs")
     session.run(*"make html".split(), external=True)
+
+    # TODO: send html doc somewhere...

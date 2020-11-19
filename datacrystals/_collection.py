@@ -2,18 +2,24 @@ import functools
 from collections.abc import Collection
 from dataclasses import asdict, fields
 from decimal import Decimal
-from typing import List, Type
+from typing import List, Type, TypeVar
 
 import hypothesis.strategies as st
 import pandas as pd
+
+from datacrystals._meta import CrystalMeta
+
+
+class Collection(metaclass=CrystalMeta):
+    pass
 
 
 # Attempting to make this functional, the easy way.
 @functools.lru_cache(typed=True)
 def _collection_from_class(_cls):
     """
-    >>> from datacrystals import datacrystal
-    >>> @datacrystal
+    >>> from datacrystals import shard
+    >>> @shard
     ... class Shard:
     ...     answer: int
     ...     question: str = "What is the answer ?"
@@ -84,11 +90,12 @@ def _collection_from_class(_cls):
     # abc.Collection interface
 
     def contains(self, item: _cls):
-        # relying on index behavior
+        # TODO relying on index behavior, if we have an index
+        # TODO : relying on hash otherwise... (optimization over ==)
         if len(self._df) > 0:
-            # Note : we cannot rely on functional behavior here, methods like __iter__ create new instances...
-            var = [getattr(self._df, f) == getattr(item, f) for f in fields(item)]
-            return all(var)  # Note: This returns True if there is no field
+            for itm in self:
+                if itm == item:  # Here we rely on equality.
+                    return True
         return False
 
     collection_attr["__contains__"] = contains
@@ -130,6 +137,8 @@ def _collection_from_class(_cls):
             typename = type(slf).__name__
             lines = [f"{typename}", "-" * len(typename)]
 
+            # TODO : define sensible float format... to allow verifying float is in output.
+            # Ref : https://docs.python.org/3/library/string.html#format-specification-mini-language
             tablines = tabulate(optdf, headers="keys", tablefmt="psql")
 
             return "\n".join(lines) + "\n" + tablines

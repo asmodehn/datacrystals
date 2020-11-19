@@ -10,8 +10,10 @@ Welcome to datacrystals's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   tutorial
-   datacrystals
+   shards
+   crystals
+   crystalmeta
+   contribute
 
 
 Indices and tables

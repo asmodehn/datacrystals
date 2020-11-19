@@ -17,7 +17,6 @@ setup(
     license="GPLv3",
     packages=["datacrystals"],
     install_requires=[
-        "pydantic",
         "pandas",
         "hypothesis",
         "tabulate",
