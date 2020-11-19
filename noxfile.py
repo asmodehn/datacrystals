@@ -87,7 +87,14 @@ def tests(session, dataclasses):
 def docs(session):
 
     session.install(".")
-    session.install("sphinx", "sphinx_autorun")
+    session.install("pytest", "sphinx", "sphinx_autorun")
 
+    # displaying current machine date (it could influence tests if not handled properly)
+    session.run(*"date --iso-8601=ns".split(), external=True)
+
+    session.run(*"pytest -sv --doctest-modules --doctest-glob=*.rst".split())
+    # Here we rely on sphinx to run doctest by itself on .rst files
     session.cd("docs")
     session.run(*"make html".split(), external=True)
+
+    # TODO: send html doc somewhere...

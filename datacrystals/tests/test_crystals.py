@@ -6,7 +6,7 @@ import hypothesis.strategies as st
 from hypothesis import Verbosity, assume, given, settings
 
 # strategy to build dataclasses dynamically
-from datacrystals._crystals import datacrystal
+from datacrystals._crystals import shard
 
 
 @st.composite
@@ -83,7 +83,7 @@ class TestDataCrystal(unittest.TestCase):
     @given(dynclass=st_dynclasses(), data=st.data())
     # @settings(verbosity=Verbosity.verbose)
     def test_strategy(self, dynclass, data):
-        dcls = datacrystal(type(*dynclass))
+        dcls = shard(type(*dynclass))
         # validating strategy
         dcinst = data.draw(dcls.strategy())
 
@@ -92,7 +92,7 @@ class TestDataCrystal(unittest.TestCase):
 
     @given(dynclass=st_dynclasses(), data=st.data())
     def test_str(self, dynclass, data):
-        dcls = datacrystal(type(*dynclass))
+        dcls = shard(type(*dynclass))
         # generating an instance of dcls
         dcinst = data.draw(dcls.strategy())
 
@@ -105,7 +105,7 @@ class TestDataCrystal(unittest.TestCase):
 
     @given(dynclass=st_dynclasses(), data=st.data())
     def test_dir(self, dynclass, data):
-        dcls = datacrystal(type(*dynclass))
+        dcls = shard(type(*dynclass))
         # generating an instance of dcls
         dcinst = data.draw(dcls.strategy())
 
@@ -125,7 +125,7 @@ class TestDataCrystal(unittest.TestCase):
     @given(dynclass=st_dynclasses(), data=st.data())
     def test_eq(self, dynclass, data):
 
-        dclsA = datacrystal(type(*dynclass))
+        dclsA = shard(type(*dynclass))
         # generating an instance of dcls
         dcA1inst = data.draw(dclsA.strategy())
         dcA2inst = data.draw(dclsA.strategy())
@@ -142,8 +142,8 @@ class TestDataCrystal(unittest.TestCase):
 
     @given(dynclassA=st_dynclasses(), dynclassB=st_dynclasses(), data=st.data())
     def test_neq(self, dynclassA, dynclassB, data):
-        dclsA = datacrystal(type(*dynclassA))
-        dclsB = datacrystal(type(*dynclassB))
+        dclsA = shard(type(*dynclassA))
+        dclsB = shard(type(*dynclassB))
         # generating an instance of dcls
         dcA1inst = data.draw(dclsA.strategy())
         dcB1inst = data.draw(dclsB.strategy())

@@ -10,10 +10,10 @@ from typing import Any, Callable, List, Optional, Tuple, Type, TypeVar, Union
 import hypothesis.strategies as st  # type: ignore
 from hypothesis import infer
 
-DataCrystalType = TypeVar("DataCrystalType")
+ShardType = TypeVar("ShardType")
 
 
-def _str(slf: DataCrystalType) -> str:
+def _str(slf: ShardType) -> str:
     # Human friendly display of dataclasses
     typename = type(slf).__name__
     lines = [f"{typename}", "-" * len(typename)]
@@ -23,12 +23,12 @@ def _str(slf: DataCrystalType) -> str:
     return "\n".join(lines)
 
 
-def _dir(slf: DataCrystalType) -> List[str]:
+def _dir(slf: ShardType) -> List[str]:
     # only expose fields
     return [f.name for f in fields(slf)]
 
 
-def _strategy(cls: Type[DataCrystalType]) -> st.SearchStrategy:
+def _strategy(cls: Type[ShardType]) -> st.SearchStrategy:
     # Strategie inferring attributes from type hints by default
 
     params = {}
@@ -53,20 +53,16 @@ def _strategy(cls: Type[DataCrystalType]) -> st.SearchStrategy:
 
 try:
     from pydantic.dataclasses import dataclass  # type: ignore
-except ImportError as ie:
-    print(ie)
-    print("WARNING: datacrystals implementation falling back to python's dataclasses.")
-    print(
-        "WARNING: Everything should work, but you might want to download pydantic instead."
-    )
 
+    print("pydantic detected: Enabling runtime dynamic typechecking.")
+except ImportError as ie:
     from dataclasses import dataclass
 
 
-def _make_dataclass(
+def _make_shard(
     _cls: Type[Any],
     order: bool,
-) -> Type[DataCrystalType]:
+) -> Type[ShardType]:
 
     cls = dataclass(
         init=True,
@@ -94,20 +90,18 @@ def _make_dataclass(
     return cls
 
 
-def datacrystal(
+def shard(
     _cls: Optional[Type[Any]] = None,
     *,
     order: bool = False,
-) -> Union[
-    Callable[[Type[DataCrystalType]], Type[DataCrystalType]], Type[DataCrystalType]
-]:
+) -> Union[Callable[[Type[ShardType]], Type[ShardType]], Type[ShardType]]:
     """
     Decorator to wrap a dataclass declaration.
     Relies on Pydantic to provide type verification.
 
     This is usable as python's dataclass decorator, but also provide more features, along with more strictness
     >>> import decimal
-    >>> @datacrystal
+    >>> @shard
     ... class SampleDataCrystal:
     ...      attr_int: int
     ...      attr_dec: decimal.Decimal
@@ -142,8 +136,8 @@ def datacrystal(
     True
     """
 
-    def wrap(cls: Type[Any]) -> Type[DataCrystalType]:
-        return _make_dataclass(cls, order=order)
+    def wrap(cls: Type[Any]) -> Type[ShardType]:
+        return _make_shard(cls, order=order)
 
     if _cls is None:
         return wrap

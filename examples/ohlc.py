@@ -1,4 +1,5 @@
 import datacrystals
+from datacrystals._crystals import ShardType
 
 
 @datacrystals.crystalize
@@ -14,6 +15,7 @@ class Candle:
     close: int
 
 
+# TRY 1 : define OHLC from Candle as Inner Type
 OHLC = datacrystals.collection(Candle)
 
 
@@ -29,9 +31,24 @@ def as_candle(self):
 
 setattr(OHLC, "as_candle", as_candle)
 
-ohlc = OHLC(
-    Candle(open=1, high=4, low=1, close=3), Candle(open=3, high=5, low=2, close=2)
-)
+c1 = Candle(open=1, high=4, low=1, close=3)
+c2 = Candle(open=3, high=5, low=2, close=2)
+ohlc = OHLC(c1, c2)
+
+
+# TRY 2 : define collection from parameters passed
+import pydantic
+
+
+@classmethod
+@pydantic.validate_arguments
+def mycollection(cls, *elems: ShardType) -> datacrystals.Collection[ShardType]:
+
+    # create the collection as usual (cf original `set()`) to get smthg working...
+    Collec = datacrystals.collection(cls)
+
+    return Collec(*elems)
+
 
 if __name__ == "__main__":
     # interactive example
