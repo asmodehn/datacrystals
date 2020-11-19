@@ -13,12 +13,12 @@ isort = "*"
 datacrystals = {editable = true, path = "."}
 gitchangelog = "*"
 ptpython = "*"
+pydantic = "*"  # this is an optional package, enabling dynamic typechecking
 
 [packages]
 result = "*"
 hypothesis = "*"
 pandas = "*"
-pydantic = "*"
 
 [requires]
 python_version = "3.8"
