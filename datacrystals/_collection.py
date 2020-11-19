@@ -7,13 +7,19 @@ from typing import List, Type, TypeVar
 import hypothesis.strategies as st
 import pandas as pd
 
+from datacrystals._meta import CrystalMeta
+
+
+class Collection(metaclass=CrystalMeta):
+    pass
+
 
 # Attempting to make this functional, the easy way.
 @functools.lru_cache(typed=True)
 def _collection_from_class(_cls):
     """
-    >>> from datacrystals import datacrystal
-    >>> @datacrystal
+    >>> from datacrystals import shard
+    >>> @shard
     ... class Shard:
     ...     answer: int
     ...     question: str = "What is the answer ?"

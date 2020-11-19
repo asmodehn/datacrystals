@@ -6,7 +6,7 @@ import hypothesis.strategies as st
 from hypothesis import Verbosity, assume, given, settings
 
 # strategy to build dataclasses dynamically
-from datacrystals._crystals import shard
+from datacrystals.shards import shard
 
 
 @st.composite

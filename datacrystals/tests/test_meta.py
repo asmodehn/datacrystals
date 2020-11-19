@@ -6,7 +6,7 @@ import hypothesis.strategies as st
 from hypothesis import Verbosity, given, settings
 
 from .._meta import CrystalMeta, _crystal_key
-from .test_crystals import st_dynclasses
+from .test_shards import st_dynclasses
 
 
 class TestCrystalKey(unittest.TestCase):

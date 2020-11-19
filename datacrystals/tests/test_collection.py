@@ -8,7 +8,7 @@ from hypothesis import Verbosity, given, settings
 from hypothesis.strategies import SearchStrategy
 
 from datacrystals._collection import _collection_from_class
-from datacrystals.tests.test_crystals import datacrystal, st_dynclasses
+from datacrystals.tests.test_shards import shard, st_dynclasses
 
 
 @st.composite
@@ -16,7 +16,7 @@ def st_collec(draw, max_size=5):
 
     # TODO : collection with datacrystal(type(...)) or with proper Metaclass ???
     # pick a type
-    dcls = datacrystal(type(*draw(st_dynclasses())))
+    dcls = shard(type(*draw(st_dynclasses())))
 
     # get the matching collection type
     Collec = _collection_from_class(dcls)

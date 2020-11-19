@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-import functools
 import typing
-import unittest
 from types import MappingProxyType
 
-from datacrystals import _crystals
-from datacrystals._crystals import _make_dataclass
+from datacrystals.shards import _make_shard
 
 
 def _crystal_key(cls):
@@ -69,7 +66,7 @@ class CrystalMeta(type):
 
         # a dataclass, which is also our instantiated class
         cls = super(CrystalMeta, mcls).__new__(mcls, typename, (), attrs)
-        dcls = _make_dataclass(
+        dcls = _make_shard(
             cls, order=False
         )  # Note: we simply rely on frozen dataclass for immutability
 
@@ -100,6 +97,11 @@ class CrystalMeta(type):
         elif other in [type, object]:  # known cases where False is appropriate
             return False
         raise NotImplementedError  # we need to be very cautious here...
+
+    def __getitem__(self, item):
+        """ Making DataCrystals subscriptables """
+        # TODO : return a new instance of a class, specialized for a specific type (or just a typehint for it ?)
+        raise NotImplementedError
 
 
 if __name__ == "__main__":
