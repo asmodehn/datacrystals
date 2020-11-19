@@ -12,7 +12,7 @@ Welcome to datacrystals's documentation!
 
    shards
    crystals
-   datacrystals
+   crystalmeta
    contribute
 
 
